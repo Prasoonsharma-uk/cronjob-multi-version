@@ -11,78 +11,34 @@ pipeline {
         KUBE_CONFIG = credentials('kubeconfig')
     }
     stages {
-        stage('Install Helm') {
+        stage('Ensure Namespaces are Correctly Labeled') {
             steps {
                 script {
                     bat '''
-                        echo Installing Helm...
+                        kubectl label namespace cronjob-v1 app.kubernetes.io/managed-by=Helm --overwrite
+                        kubectl annotate namespace cronjob-v1 meta.helm.sh/release-name=cronjob-v1 meta.helm.sh/release-namespace=cronjob --overwrite
 
-                        :: Download Helm installation script
-                        curl -fsSL -o get_helm.bat https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+                        kubectl label namespace cronjob-v2 app.kubernetes.io/managed-by=Helm --overwrite
+                        kubectl annotate namespace cronjob-v2 meta.helm.sh/release-name=cronjob-v2 meta.helm.sh/release-namespace=cronjob --overwrite
 
-                        :: Make the script executable
-                        chmod 700 get_helm.bat
-
-                        :: Run the script to install Helm
-                        get_helm.bat
-
-                        :: Clean up the installation script
-                        del get_helm.bat
-
-                        :: Verify Helm installation
-                        helm version
+                        kubectl label namespace cronjob-v3 app.kubernetes.io/managed-by=Helm --overwrite
+                        kubectl annotate namespace cronjob-v3 meta.helm.sh/release-name=cronjob-v3 meta.helm.sh/release-namespace=cronjob --overwrite
                     '''
                 }
             }
         }
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    // Build Docker image with the specified version
-                    bat "docker build -t ${REGISTRY}/${IMAGE}:${params.VERSION} -f Dockerfile ."
-                }
-            }
-        }
-        stage('Push Docker Image') {
-            steps {
-                script {
-                    // Push Docker image to the registry with the specified tag
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
-                        bat "docker push ${REGISTRY}/${IMAGE}:${params.VERSION}"
-                    }
-                }
-            }
-        }
-        stage('Deploy CronJob v1') {
+        stage('Deploy CronJobs') {
             steps {
                 script {
                     withKubeConfig([credentialsId: 'kubeconfig']) {
                         bat '''
-                            echo Deploying CronJob v1...
+                            echo Deploying cronjob-v1...
                             helm upgrade --install cronjob-v1 ./helm/cronjob-multi-version --namespace cronjob --values ./helm/cronjob-multi-version/values-v1.yaml
-                        '''
-                    }
-                }
-            }
-        }
-        stage('Deploy CronJob v2') {
-            steps {
-                script {
-                    withKubeConfig([credentialsId: 'kubeconfig']) {
-                        bat '''
-                            echo Deploying CronJob v2...
+
+                            echo Deploying cronjob-v2...
                             helm upgrade --install cronjob-v2 ./helm/cronjob-multi-version --namespace cronjob --values ./helm/cronjob-multi-version/values-v2.yaml
-                        '''
-                    }
-                }
-            }
-        }
-        stage('Deploy CronJob v3') {
-            steps {
-                script {
-                    withKubeConfig([credentialsId: 'kubeconfig']) {
-                        bat '''
-                            echo Deploying CronJob v3...
+
+                            echo Deploying cronjob-v3...
                             helm upgrade --install cronjob-v3 ./helm/cronjob-multi-version --namespace cronjob --values ./helm/cronjob-multi-version/values-v3.yaml
                         '''
                     }
