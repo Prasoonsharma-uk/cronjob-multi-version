@@ -53,6 +53,25 @@ pipeline {
                 }
             }
         }
+        stage('Clean Up') {
+            steps {
+                script {
+                    withKubeConfig([credentialsId: 'kubeconfig']) {
+                        bat '''
+                            echo Cleaning up existing Helm releases and namespaces...
+
+                            helm delete cronjob-v1 --namespace cronjob-v1 || echo "Release cronjob-v1 not found"
+                            helm delete cronjob-v2 --namespace cronjob-v2 || echo "Release cronjob-v2 not found"
+                            helm delete cronjob-v3 --namespace cronjob-v3 || echo "Release cronjob-v3 not found"
+
+                            kubectl delete namespace cronjob-v1 || echo "Namespace cronjob-v1 not found"
+                            kubectl delete namespace cronjob-v2 || echo "Namespace cronjob-v2 not found"
+                            kubectl delete namespace cronjob-v3 || echo "Namespace cronjob-v3 not found"
+                        '''
+                    }
+                }
+            }
+        }
         stage('Create Namespaces') {
             steps {
                 script {
