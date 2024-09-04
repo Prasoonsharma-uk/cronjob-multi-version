@@ -53,16 +53,7 @@ pipeline {
                 }
             }
         }
-        stage('Create Namespace if Not Exists') {
-            steps {
-                script {
-                    bat '''
-                        echo Checking if namespace 'cronjob' exists...
-                        kubectl get namespace cronjob || kubectl create namespace cronjob
-                    '''
-                }
-            }
-        }
+        
         stage('Deploy CronJob v1') {
             steps {
                 script {
