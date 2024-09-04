@@ -71,16 +71,19 @@ pipeline {
         stage('Create Namespaces and PVCs') {
             steps {
                 script {
-                    def namespaces = ['cronjob-v1-namespace', 'cronjob-v2-namespace', 'cronjob-v3-namespace']
                     withKubeConfig([credentialsId: 'kubeconfig']) {
+                        bat """
+                            echo Applying namespace configurations...
+
+                            :: Apply the namespace configurations
+                            kubectl apply -f ./helm/namespace.yaml
+                        """
+                        
+                        def namespaces = ['cronjob-v1-namespace', 'cronjob-v2-namespace', 'cronjob-v3-namespace']
                         namespaces.each { ns ->
                             bat """
-                                echo Creating namespace and PVC for ${ns}...
+                                echo Deploying PersistentVolumeClaim in namespace ${ns}...
 
-                                :: Create the namespace
-                                kubectl create namespace ${ns} --dry-run=client -o yaml | kubectl apply -f -
-
-                                :: Deploy the PersistentVolumeClaim using Helm
                                 helm upgrade --install cronjob-app-pvc-${ns} ./helm/cronjob-multi-version \
                                 --namespace ${ns} \
                                 --set persistentVolumeClaim.name=cronjob-app-pvc-${ns} \
