@@ -78,17 +78,4 @@ pipeline {
                 }
             }
         }
-        stage('Deploy CronJob v3') {
-            steps {
-                script {
-                    withKubeConfig([credentialsId: 'kubeconfig']) {
-                        bat '''
-                            echo Deploying CronJob v3...
-                            helm upgrade --install cronjob-v3 ./helm/cronjob-multi-version --namespace cronjob3 --values ./helm/cronjob-multi-version/values-v3.yaml
-                        '''
-                    }
-                }
-            }
-        }
-    }
-}
+        
