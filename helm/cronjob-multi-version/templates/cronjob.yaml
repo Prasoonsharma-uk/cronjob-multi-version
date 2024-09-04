@@ -3,7 +3,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: {{ $.Release.Name }}-{{ .name }}
-  namespace: cronjob
+  namespace: {{ .namespace }}
   labels:
     app: {{ $.Release.Name }}
 spec:
@@ -26,9 +26,9 @@ spec:
             volumeMounts:
             - name: output-volume
               mountPath: /output
-            restartPolicy: OnFailure
-            volumes:
-            - name: output-volume
-              persistentVolumeClaim:
-                claimName: {{ $.Values.persistentVolumeClaim.name }}
+          restartPolicy: OnFailure
+          volumes:
+          - name: output-volume
+            persistentVolumeClaim:
+              claimName: {{ $.Values.persistentVolumeClaim.name }}
 {{- end }}
