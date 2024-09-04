@@ -73,7 +73,7 @@ pipeline {
                     withKubeConfig([credentialsId: 'kubeconfig']) {
                         bat """
                             echo Deploying CronJob V2...
-                            helm upgrade --install ${params.RELEASE_NAME} ./helm/cronjob-multi-version --namespace cronjob --values ./helm/cronjob-multi-version/values-v2.yaml --set releaseName=${params.RELEASE_NAME}
+                            helm upgrade --install cronjob-v2 ./helm/cronjob-multi-version --namespace cronjob --values ./helm/cronjob-multi-version/values-v2.yaml
                         """
                     }
                 }
