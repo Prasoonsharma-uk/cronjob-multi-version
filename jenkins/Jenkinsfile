@@ -63,7 +63,7 @@ pipeline {
                     withKubeConfig([credentialsId: 'kubeconfig']) {
                         bat """
                         echo Deploying cronjob-v1 to Kubernetes...
-                        helm upgrade --install cronjob-v1 ./helm/cronjob-multi-version \
+                        helm upgrade cronjob-v1 --install cronjob-v1 ./helm/cronjob-multi-version \
                                      --namespace cronjob-v1 \
                                      --set image.repository=${REGISTRY}/${IMAGE} \
                                      --set image.tag=${TAG} \
@@ -80,7 +80,7 @@ pipeline {
                     withKubeConfig([credentialsId: 'kubeconfig']) {
                         bat """
                         echo Deploying cronjob-v2 to Kubernetes...
-                        helm upgrade --install cronjob-v2 ./helm/cronjob-multi-version \
+                        helm upgrade cronjob-v2 --install cronjob-v2 ./helm/cronjob-multi-version \
                                      --namespace cronjob-v2 \
                                      --set image.repository=${REGISTRY}/${IMAGE} \
                                      --set image.tag=${TAG} \
@@ -97,7 +97,7 @@ pipeline {
                     withKubeConfig([credentialsId: 'kubeconfig']) {
                         bat """
                         echo Deploying cronjob-v3 to Kubernetes...
-                        helm upgrade --install cronjob-v3 ./helm/cronjob-multi-version \
+                        helm upgrade cronjob-v3 --install cronjob-v3 ./helm/cronjob-multi-version \
                                      --namespace cronjob-v3 \
                                      --set image.repository=${REGISTRY}/${IMAGE} \
                                      --set image.tag=${TAG} \
