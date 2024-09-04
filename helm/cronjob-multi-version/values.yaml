@@ -1,19 +1,17 @@
-namespace: cronjob
-
 image:
   repository: prasoonshrama25/cronjob-app
   tag: "latest"
 
 cronJobs:
   - name: cronjob-v1
-    schedule: "*/5 * * * *"
-    outputPath: "logs/version1"
+    schedule: "{{ .Values.schedule.cronjob-v1 }}"
+    outputPath: "{{ .Values.outputPath.cronjob-v1 }}"
   - name: cronjob-v2
-    schedule: "*/10 * * * *"
-    outputPath: "logs/version2"
+    schedule: "{{ .Values.schedule.cronjob-v2 }}"
+    outputPath: "{{ .Values.outputPath.cronjob-v2 }}"
   - name: cronjob-v3
-    schedule: "*/15 * * * *"
-    outputPath: "logs/version3"
+    schedule: "{{ .Values.schedule.cronjob-v3 }}"
+    outputPath: "{{ .Values.outputPath.cronjob-v3 }}"
 
 persistentVolumeClaim:
   name: cronjob-app-pvc
