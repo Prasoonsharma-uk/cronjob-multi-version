@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: cronjob-v2
-  namespace: {{ .Values.namespace }}
+  namespace: cronjob-v2
   labels:
     app.kubernetes.io/managed-by: Helm
   annotations:
