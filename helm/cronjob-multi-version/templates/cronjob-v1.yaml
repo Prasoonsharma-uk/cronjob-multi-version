@@ -5,9 +5,7 @@ metadata:
   namespace: {{ .Values.namespace }}
   labels:
     app.kubernetes.io/managed-by: Helm
-  annotations:
-    meta.helm.sh/release-name: {{ .Values.releaseName }}
-    meta.helm.sh/release-namespace: {{ .Values.namespace }}
+  
 spec:
   schedule: "{{ .Values.schedule }}"
   jobTemplate:
