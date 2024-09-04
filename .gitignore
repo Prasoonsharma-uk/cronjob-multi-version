@@ -7,10 +7,7 @@ node_modules/
 # Docker files
 *.tar
 
-# Kubernetes files
-*.yaml
-
-# Helm files
+# Ignore Helm packages, but include everything else in helm directory
 *.tgz
 
 # Jenkins workspace
