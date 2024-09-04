@@ -5,7 +5,7 @@ pipeline {
     }
     environment {
         REGISTRY = 'prasoonshrama25'
-        IMAGE = 'k8s-deployment-dockerimage'
+        IMAGE = 'cronjob-app'
         TAG = "${params.VERSION}" // Use the version parameter for tagging
         DOCKER_CREDENTIALS_ID = 'docker-credentials-id'
         KUBE_CONFIG = credentials('kubeconfig')
@@ -58,8 +58,8 @@ pipeline {
                 script {
                     withKubeConfig([credentialsId: 'kubeconfig']) {
                         bat '''
-                            echo Creating cronjob namespace...
-                            kubectl create namespace cronjob || echo "Namespace cronjob already exists"
+                            echo Creating namespaces...
+                            kubectl create -f helm/cronjob-multi-version/templates/namespace.yaml || echo "Namespaces already exist"
 
                             echo Deploying to Kubernetes...
                             helm upgrade --install cronjob-app ./helm/cronjob-multi-version --namespace cronjob --set image.repository=${REGISTRY}/${IMAGE} --set image.tag=${VERSION}
