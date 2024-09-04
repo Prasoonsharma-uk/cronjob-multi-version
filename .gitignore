@@ -1,0 +1,14 @@
+# Node modules
+node_modules/
+
+# Logs
+*.log
+
+# Docker files
+*.tar
+
+# Ignore Helm packages, but include everything else in helm directory
+*.tgz
+
+# Jenkins workspace
+workspace/
