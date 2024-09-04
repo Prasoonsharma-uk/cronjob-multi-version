@@ -1,1 +1,9 @@
+namespace: cronjob
+schedule: "*/10 * * * *"
+image:
+  repository: prasoonshrama25/cronjob-app
+  tag: "latest"
+outputPath: "logs/version2"
+persistentVolumeClaim:
+  name: cronjob-app-pvc
 
