@@ -2,16 +2,10 @@ pipeline {
     agent any
     parameters {
         string(name: 'VERSION', defaultValue: 'latest', description: 'Docker image version')
-        string(name: 'CRON_SCHEDULE_1', defaultValue: '*/5 * * * *', description: 'Cron schedule for cronjob-v1')
-        string(name: 'CRON_SCHEDULE_2', defaultValue: '*/10 * * * *', description: 'Cron schedule for cronjob-v2')
-        string(name: 'CRON_SCHEDULE_3', defaultValue: '*/15 * * * *', description: 'Cron schedule for cronjob-v3')
-        string(name: 'OUTPUT_PATH_1', defaultValue: 'logs/version1', description: 'Output path for cronjob-v1')
-        string(name: 'OUTPUT_PATH_2', defaultValue: 'logs/version2', description: 'Output path for cronjob-v2')
-        string(name: 'OUTPUT_PATH_3', defaultValue: 'logs/version3', description: 'Output path for cronjob-v3')
     }
     environment {
         REGISTRY = 'prasoonshrama25'
-        IMAGE = 'cronjob-app'
+        IMAGE = 'k8s-deployment-dockerimage'
         TAG = "${params.VERSION}" // Use the version parameter for tagging
         DOCKER_CREDENTIALS_ID = 'docker-credentials-id'
         KUBE_CONFIG = credentials('kubeconfig')
@@ -21,22 +15,22 @@ pipeline {
             steps {
                 script {
                     bat '''
-                    echo Installing Helm...
+                        echo Installing Helm...
 
-                    :: Download Helm installation script
-                    curl -fsSL -o get_helm.bat https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+                        :: Download Helm installation script
+                        curl -fsSL -o get_helm.bat https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
 
-                    :: Make the script executable
-                    chmod 700 get_helm.bat
+                        :: Make the script executable
+                        chmod 700 get_helm.bat
 
-                    :: Run the script to install Helm
-                    get_helm.bat
+                        :: Run the script to install Helm
+                        get_helm.bat
 
-                    :: Clean up the installation script
-                    del get_helm.bat
+                        :: Clean up the installation script
+                        del get_helm.bat
 
-                    :: Verify Helm installation
-                    helm version
+                        :: Verify Helm installation
+                        helm version
                     '''
                 }
             }
@@ -44,6 +38,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
+                    // Build Docker image with the specified version
                     bat "docker build -t ${REGISTRY}/${IMAGE}:${params.VERSION} -f Dockerfile ."
                 }
             }
@@ -51,63 +46,24 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
+                    // Push Docker image to the registry with the specified tag
                     docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
                         bat "docker push ${REGISTRY}/${IMAGE}:${params.VERSION}"
                     }
                 }
             }
         }
-        stage('Deploy with Helm (cronjob-v1)') {
+        stage('Deploy with Helm') {
             steps {
                 script {
                     withKubeConfig([credentialsId: 'kubeconfig']) {
-                        bat """
-                        echo Checking if namespace cronjob-v1 exists...
-                        kubectl get namespace cronjob-v1 || kubectl create namespace cronjob-v1
+                        bat '''
+                            echo Creating namespaces...
+                            kubectl create -f helm/cronjob-multi-version/templates/namespace.yaml || echo "Namespaces already exist"
 
-                        echo Deploying cronjob-v1 to Kubernetes...
-                       helm upgrade --install cronjob-v1 ./helm/cronjob-multi-version --namespace cronjob-v1 --set image.repository=${REGISTRY}/${IMAGE} --set image.tag=${VERSION} --set cronJobs[0].schedule=${params.CRON_SCHEDULE_1} --set cronJobs[0].outputPath=${params.OUTPUT_PATH_1}
-                        """
-                    }
-                }
-            }
-        }
-        stage('Deploy with Helm (cronjob-v2)') {
-            steps {
-                script {
-                    withKubeConfig([credentialsId: 'kubeconfig']) {
-                        bat """
-                        echo Checking if namespace cronjob-v2 exists...
-                        kubectl get namespace cronjob-v2 || kubectl create namespace cronjob-v2
-
-                        echo Deploying cronjob-v2 to Kubernetes...
-                        helm upgrade --install cronjob-v2 ./helm/cronjob-multi-version \
-                                     --namespace cronjob-v2 \
-                                     --set image.repository=${REGISTRY}/${IMAGE} \
-                                     --set image.tag=${TAG} \
-                                     --set cronJobs[1].schedule=${params.CRON_SCHEDULE_2} \
-                                     --set cronJobs[1].outputPath=${params.OUTPUT_PATH_2}
-                        """
-                    }
-                }
-            }
-        }
-        stage('Deploy with Helm (cronjob-v3)') {
-            steps {
-                script {
-                    withKubeConfig([credentialsId: 'kubeconfig']) {
-                        bat """
-                        echo Checking if namespace cronjob-v3 exists...
-                        kubectl get namespace cronjob-v3 || kubectl create namespace cronjob-v3
-
-                        echo Deploying cronjob-v3 to Kubernetes...
-                        helm upgrade --install cronjob-v3 ./helm/cronjob-multi-version \
-                                     --namespace cronjob-v3 \
-                                     --set image.repository=${REGISTRY}/${IMAGE} \
-                                     --set image.tag=${TAG} \
-                                     --set cronJobs[2].schedule=${params.CRON_SCHEDULE_3} \
-                                     --set cronJobs[2].outputPath=${params.OUTPUT_PATH_3}
-                        """
+                            echo Deploying to Kubernetes...
+                            helm upgrade --install cronjob-app ./helm/cronjob-multi-version --namespace cronjob --set image.repository=${REGISTRY}/${IMAGE} --set image.tag=${VERSION}
+                        '''
                     }
                 }
             }
