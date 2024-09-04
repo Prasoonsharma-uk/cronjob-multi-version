@@ -9,9 +9,7 @@ cronJobs:
   - name: cronjob-v2
     schedule: "*/10 * * * *"
     outputPath: "logs/version2"
-  - name: cronjob-v3
-    schedule: "*/15 * * * *"
-    outputPath: "logs/version3"
+
 
 persistentVolumeClaim:
   name: cronjob-app-pvc
