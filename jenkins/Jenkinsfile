@@ -59,7 +59,7 @@ pipeline {
                     withKubeConfig([credentialsId: 'kubeconfig']) {
                         bat '''
                             echo Deploying to Kubernetes...
-                            helm upgrade --install cronjob-app ./helm/cronjob-multi-version --namespace cronjob --create-namespace --set image.repository=${REGISTRY}/${IMAGE} --set image.tag=${VERSION}
+                            helm upgrade --install cronjob-app ./helm/cronjob-multi-version --namespace cronjob --set image.repository=${REGISTRY}/${IMAGE} --set image.tag=${VERSION}
                         '''
                     }
                 }
