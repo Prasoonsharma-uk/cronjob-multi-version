@@ -1,13 +1,13 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: cronjob-v1
+  name: {{ .Values.releaseName }}
   namespace: {{ .Values.namespace }}
   labels:
     app.kubernetes.io/managed-by: Helm
   annotations:
-    meta.helm.sh/release-name: cronjob-v1
-    meta.helm.sh/release-namespace: cronjob
+    meta.helm.sh/release-name: {{ .Values.releaseName }}
+    meta.helm.sh/release-namespace: {{ .Values.namespace }}
 spec:
   schedule: "{{ .Values.schedule }}"
   jobTemplate:
@@ -15,13 +15,13 @@ spec:
       template:
         spec:
           containers:
-          - name: cronjob-v1
+          - name: {{ .Values.releaseName }}
             image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
             command:
             - /bin/sh
             - -c
             - |
-              echo "Running CronJob v1 at $(date)" > /output/file-$(date +%Y%m%dT%H%M%S).txt
+              echo "Running cron job {{ .Values.releaseName }} with version {{ .Values.image.tag }} at $(date)" > /output/{{ .Values.outputPath }}/file-$(date +\%Y\%m\%dT\%H\%M\%S).txt
             env:
             - name: OUTPUT_PATH
               value: "{{ .Values.outputPath }}"
