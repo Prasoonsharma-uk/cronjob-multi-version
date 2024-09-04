@@ -53,16 +53,51 @@ pipeline {
                 }
             }
         }
-        stage('Deploy with Helm') {
+        stage('Create Namespaces') {
             steps {
                 script {
                     withKubeConfig([credentialsId: 'kubeconfig']) {
                         bat '''
-                            echo Creating namespaces...
-                            kubectl create -f helm/cronjob-multi-version/templates/namespace.yaml || echo "Namespaces already exist"
-
-                            echo Deploying to Kubernetes...
-                            helm upgrade --install cronjob-app ./helm/cronjob-multi-version --namespace cronjob --set image.repository=${REGISTRY}/${IMAGE} --set image.tag=${VERSION}
+                            echo Checking and creating namespaces if needed...
+                            kubectl get namespace cronjob-v1 || kubectl create namespace cronjob-v1
+                            kubectl get namespace cronjob-v2 || kubectl create namespace cronjob-v2
+                            kubectl get namespace cronjob-v3 || kubectl create namespace cronjob-v3
+                        '''
+                    }
+                }
+            }
+        }
+        stage('Deploy CronJob v1') {
+            steps {
+                script {
+                    withKubeConfig([credentialsId: 'kubeconfig']) {
+                        bat '''
+                            echo Deploying CronJob v1 to namespace cronjob-v1...
+                            helm upgrade --install cronjob-v1 ./helm/cronjob-multi-version --namespace cronjob-v1 --set image.repository=${REGISTRY}/${IMAGE} --set image.tag=${VERSION} --set cronJobs[0].namespace=cronjob-v1
+                        '''
+                    }
+                }
+            }
+        }
+        stage('Deploy CronJob v2') {
+            steps {
+                script {
+                    withKubeConfig([credentialsId: 'kubeconfig']) {
+                        bat '''
+                            echo Deploying CronJob v2 to namespace cronjob-v2...
+                            helm upgrade --install cronjob-v2 ./helm/cronjob-multi-version --namespace cronjob-v2 --set image.repository=${REGISTRY}/${IMAGE} --set image.tag=${VERSION} --set cronJobs[1].namespace=cronjob-v2
+                        '''
+                    }
+                }
+            }
+        }
+        stage('Deploy CronJob v3') {
+            steps {
+                script {
+                    withKubeConfig([credentialsId: 'kubeconfig']) {
+                        bat '''
+                            echo Deploying CronJob v3 to namespace cronjob-v3...
+                            helm upgrade --install cronjob-v3 ./helm/cronjob-multi-version --namespace cronjob-v3 --set image.repository=${REGISTRY}/${IMAGE} --set image.tag=${VERSION} --set cronJobs[2].namespace=cronjob-v3
                         '''
                     }
                 }
