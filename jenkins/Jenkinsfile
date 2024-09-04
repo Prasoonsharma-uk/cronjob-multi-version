@@ -2,7 +2,6 @@ pipeline {
     agent any
     parameters {
         string(name: 'VERSION', defaultValue: 'latest', description: 'Docker image version')
-        string(name: 'RELEASE_NAME', defaultValue: 'cronjob-v2', description: 'Helm release name')
     }
     environment {
         REGISTRY = 'prasoonshrama25'
