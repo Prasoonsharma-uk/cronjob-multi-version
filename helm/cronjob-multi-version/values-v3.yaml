@@ -1,3 +1,5 @@
+releaseName: cronjob-v3
+
 namespace: cronjob
 schedule: "*/15 * * * *"
 image:
