@@ -20,6 +20,9 @@ pipeline {
                         :: Download Helm installation script
                         curl -fsSL -o get_helm.bat https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
 
+                        :: Make the script executable
+                        chmod 700 get_helm.bat
+
                         :: Run the script to install Helm
                         get_helm.bat
 
@@ -48,50 +51,27 @@ pipeline {
                 }
             }
         }
-        stage('Clean Up Existing Resources') {
-            steps {
-                script {
-                    def namespaces = ['cronjob-v1-namespace', 'cronjob-v2-namespace', 'cronjob-v3-namespace']
-                    withKubeConfig([credentialsId: 'kubeconfig']) {
-                        namespaces.each { ns ->
-                            bat """
-                                echo Cleaning up resources in namespace ${ns}...
-
-                                :: Delete existing Helm releases if they exist
-                                helm delete cronjob-app-pvc-${ns} --namespace ${ns} || echo "No existing Helm release to delete in namespace ${ns}"
-
-                                :: Clean up old Helm metadata
-                                kubectl annotate namespace ${ns} meta.helm.sh/release-name- || echo "No Helm release annotations to remove in namespace ${ns}"
-                                kubectl annotate namespace ${ns} meta.helm.sh/release-namespace- || echo "No Helm release namespace annotations to remove in namespace ${ns}"
-
-                                :: Delete existing namespace if needed
-                                kubectl delete namespace ${ns} --ignore-not-found=true
-                            """
-                        }
-                    }
-                }
-            }
-        }
         stage('Create Namespaces and PVCs') {
             steps {
                 script {
+                    def namespaces = ['cronjob-v1', 'cronjob-v2', 'cronjob-v3']
                     withKubeConfig([credentialsId: 'kubeconfig']) {
-                        bat """
-                            echo Applying namespace configurations...
-
-                            :: Apply the namespace configurations
-                            kubectl apply -f ./helm/cronjob-multi-version/templates/namespace.yaml
-                        """
-                        
-                        def namespaces = ['cronjob-v1-namespace', 'cronjob-v2-namespace', 'cronjob-v3-namespace']
                         namespaces.each { ns ->
                             bat """
-                                echo Deploying PersistentVolumeClaim in namespace ${ns}...
+                                echo Creating namespace and PVC for ${ns}...
 
+                                :: Create the namespace
+                                kubectl create namespace ${ns} --dry-run=client -o yaml | kubectl apply -f -
+
+                                :: Add Helm-specific labels and annotations
+                                kubectl label namespace ${ns} app.kubernetes.io/managed-by=Helm --overwrite
+                                kubectl annotate namespace ${ns} meta.helm.sh/release-name=cronjob-app-pvc-${ns} --overwrite
+                                kubectl annotate namespace ${ns} meta.helm.sh/release-namespace=${ns} --overwrite
+
+                                :: Deploy the PersistentVolumeClaim
                                 helm upgrade --install cronjob-app-pvc-${ns} ./helm/cronjob-multi-version \
-                                --namespace ${ns} \
-                                --set persistentVolumeClaim.name=cronjob-app-pvc-${ns} \
-                                --set persistentVolumeClaim.namespace=${ns}
+                                  --namespace ${ns} \
+                                  --set persistentVolumeClaim.name=cronjob-app-pvc-${ns}
                             """
                         }
                     }
@@ -101,17 +81,24 @@ pipeline {
         stage('Deploy CronJobs') {
             steps {
                 script {
-                    def namespaces = ['cronjob-v1-namespace', 'cronjob-v2-namespace', 'cronjob-v3-namespace']
-                    withKubeConfig([credentialsId: 'kubeconfig']) {
-                        namespaces.each { ns ->
-                            bat """
-                                echo Deploying CronJobs in namespace ${ns}...
+                    def cronJobs = [
+                        [name: 'cronjob-v1', schedule: '*/5 * * * *', outputPath: 'logs/version1'],
+                        [name: 'cronjob-v2', schedule: '*/10 * * * *', outputPath: 'logs/version2'],
+                        [name: 'cronjob-v3', schedule: '*/15 * * * *', outputPath: 'logs/version3'],
+                    ]
 
-                                helm upgrade --install cronjob-app-${ns} ./helm/cronjob-multi-version \
-                                --namespace ${ns} \
-                                --set image.repository=${REGISTRY}/${IMAGE} \
-                                --set image.tag=${VERSION} \
-                                --set namespace=${ns}
+                    withKubeConfig([credentialsId: 'kubeconfig']) {
+                        cronJobs.each { job ->
+                            bat """
+                                echo Deploying CronJob ${job.name}...
+
+                                helm upgrade --install cronjob-app-${job.name} ./helm/cronjob-multi-version \
+                                  --namespace ${job.name} \
+                                  --set image.repository=${REGISTRY}/${IMAGE} \
+                                  --set image.tag=${VERSION} \
+                                  --set cronJobs[0].name=${job.name} \
+                                  --set cronJobs[0].schedule=${job.schedule} \
+                                  --set cronJobs[0].outputPath=${job.outputPath}
                             """
                         }
                     }
