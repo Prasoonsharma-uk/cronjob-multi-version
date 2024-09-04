@@ -1,3 +1,5 @@
+releaseName: cronjob-v1
+
 namespace: cronjob
 schedule: "*/5 * * * *"
 image:
