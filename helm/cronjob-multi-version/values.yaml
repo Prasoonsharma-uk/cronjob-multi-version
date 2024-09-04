@@ -1,5 +1,5 @@
 image:
-  repository: prasoonshrama25/cronjob-app
+  repository: prasoonshrama25/k8s-deployment-dockerimage
   tag: "latest"
 
 cronJobs:
