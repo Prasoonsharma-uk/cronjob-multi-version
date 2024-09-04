@@ -58,8 +58,11 @@ pipeline {
                 script {
                     withKubeConfig([credentialsId: 'kubeconfig']) {
                         bat '''
+                            echo Creating cronjob namespace...
+                            kubectl create namespace cronjob || echo "Namespace cronjob already exists"
+
                             echo Deploying to Kubernetes...
-                            helm upgrade --install cronjob-app ./helm/cronjob-multi-version --set image.repository=${REGISTRY}/${IMAGE} --set image.tag=${VERSION}
+                            helm upgrade --install cronjob-app ./helm/cronjob-multi-version --namespace cronjob --set image.repository=${REGISTRY}/${IMAGE} --set image.tag=${VERSION}
                         '''
                     }
                 }
