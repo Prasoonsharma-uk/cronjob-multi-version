@@ -20,14 +20,11 @@ pipeline {
         stage('Install Helm') {
             steps {
                 script {
-                    """
+                    bat """
                     echo Installing Helm...
 
                     :: Download Helm installation script
                     curl -fsSL -o get_helm.bat https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-
-                    :: Make the script executable
-                    chmod 700 get_helm.bat
 
                     :: Run the script to install Helm
                     get_helm.bat
@@ -58,21 +55,36 @@ pipeline {
                 }
             }
         }
+        stage('Create Namespaces') {
+            steps {
+                script {
+                    withKubeConfig([credentialsId: 'kubeconfig']) {
+                        bat """
+                        echo Creating cronjob-v1 namespace...
+                        kubectl create namespace cronjob-v1 || echo "Namespace cronjob-v1 already exists"
+
+                        echo Creating cronjob-v2 namespace...
+                        kubectl create namespace cronjob-v2 || echo "Namespace cronjob-v2 already exists"
+
+                        echo Creating cronjob-v3 namespace...
+                        kubectl create namespace cronjob-v3 || echo "Namespace cronjob-v3 already exists"
+                        """
+                    }
+                }
+            }
+        }
         stage('Deploy with Helm (cronjob-v1)') {
             steps {
                 script {
                     withKubeConfig([credentialsId: 'kubeconfig']) {
-                        """
-                        echo Creating cronjob namespace...
-                        kubectl create namespace cronjob || echo "Namespace cronjob already exists"
-
+                        bat """
                         echo Deploying cronjob-v1 to Kubernetes...
                         helm upgrade --install cronjob-v1 ./helm/cronjob-multi-version \
-                                     --namespace cronjob \
+                                     --namespace cronjob-v1 \
                                      --set image.repository=${REGISTRY}/${IMAGE} \
                                      --set image.tag=${VERSION} \
-                                     --set schedule="{{ params.CRON_SCHEDULE_1 }}" \
-                                     --set outputPath="{{ params.OUTPUT_PATH_1 }}"
+                                     --set schedule=${params.CRON_SCHEDULE_1} \
+                                     --set outputPath=${params.OUTPUT_PATH_1}
                         """
                     }
                 }
@@ -82,14 +94,14 @@ pipeline {
             steps {
                 script {
                     withKubeConfig([credentialsId: 'kubeconfig']) {
-                        """
+                        bat """
                         echo Deploying cronjob-v2 to Kubernetes...
                         helm upgrade --install cronjob-v2 ./helm/cronjob-multi-version \
-                                     --namespace cronjob \
+                                     --namespace cronjob-v2 \
                                      --set image.repository=${REGISTRY}/${IMAGE} \
                                      --set image.tag=${VERSION} \
-                                     --set schedule="{{ params.CRON_SCHEDULE_2 }}" \
-                                     --set outputPath="{{ params.OUTPUT_PATH_2 }}"
+                                     --set schedule=${params.CRON_SCHEDULE_2} \
+                                     --set outputPath=${params.OUTPUT_PATH_2}
                         """
                     }
                 }
@@ -99,14 +111,14 @@ pipeline {
             steps {
                 script {
                     withKubeConfig([credentialsId: 'kubeconfig']) {
-                        """
+                        bat """
                         echo Deploying cronjob-v3 to Kubernetes...
                         helm upgrade --install cronjob-v3 ./helm/cronjob-multi-version \
-                                     --namespace cronjob \
+                                     --namespace cronjob-v3 \
                                      --set image.repository=${REGISTRY}/${IMAGE} \
                                      --set image.tag=${VERSION} \
-                                     --set schedule="{{ params.CRON_SCHEDULE_3 }}" \
-                                     --set outputPath="{{ params.OUTPUT_PATH_3 }}"
+                                     --set schedule=${params.CRON_SCHEDULE_3} \
+                                     --set outputPath=${params.OUTPUT_PATH_3}
                         """
                     }
                 }
