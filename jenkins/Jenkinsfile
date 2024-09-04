@@ -55,24 +55,7 @@ pipeline {
                 }
             }
         }
-        stage('Create Namespaces') {
-            steps {
-                script {
-                    withKubeConfig([credentialsId: 'kubeconfig']) {
-                        bat """
-                        echo Creating cronjob-v1 namespace...
-                        kubectl create namespace cronjob-v1 || echo "Namespace cronjob-v1 already exists"
-
-                        echo Creating cronjob-v2 namespace...
-                        kubectl create namespace cronjob-v2 || echo "Namespace cronjob-v2 already exists"
-
-                        echo Creating cronjob-v3 namespace...
-                        kubectl create namespace cronjob-v3 || echo "Namespace cronjob-v3 already exists"
-                        """
-                    }
-                }
-            }
-        }
+       
         stage('Deploy with Helm (cronjob-v1)') {
             steps {
                 script {
