@@ -5,7 +5,7 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: Helm
   annotations:
-    meta.helm.sh/release-name: cronjob-app
+    meta.helm.sh/release-name: cronjob-app-pvc-cronjob-v1-namespace
     meta.helm.sh/release-namespace: cronjob-v1-namespace
 ---
 apiVersion: v1
@@ -15,7 +15,7 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: Helm
   annotations:
-    meta.helm.sh/release-name: cronjob-app
+    meta.helm.sh/release-name: cronjob-app-pvc-cronjob-v2-namespace
     meta.helm.sh/release-namespace: cronjob-v2-namespace
 ---
 apiVersion: v1
@@ -25,5 +25,5 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: Helm
   annotations:
-    meta.helm.sh/release-name: cronjob-app
+    meta.helm.sh/release-name: cronjob-app-pvc-cronjob-v3-namespace
     meta.helm.sh/release-namespace: cronjob-v3-namespace
