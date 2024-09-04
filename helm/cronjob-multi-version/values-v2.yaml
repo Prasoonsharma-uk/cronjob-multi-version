@@ -1,3 +1,5 @@
+releaseName: cronjob-v2
+
 namespace: cronjob
 schedule: "*/10 * * * *"
 image:
