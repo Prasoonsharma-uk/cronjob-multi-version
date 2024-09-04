@@ -65,8 +65,8 @@ pipeline {
 
                                 :: Add Helm-specific labels and annotations
                                 kubectl label namespace ${ns} app.kubernetes.io/managed-by=Helm --overwrite
-                                kubectl annotate namespace ${ns} meta.helm.sh/release-name=cronjob-app --overwrite
-                                kubectl annotate namespace ${ns} meta.helm.sh/release-namespace=cronjob --overwrite
+                                kubectl annotate namespace ${ns} meta.helm.sh/release-name=cronjob-app-pvc-${ns} --overwrite
+                                kubectl annotate namespace ${ns} meta.helm.sh/release-namespace=${ns} --overwrite
 
                                 :: Deploy the PersistentVolumeClaim
                                 helm upgrade --install cronjob-app-pvc-${ns} ./helm/cronjob-multi-version \
