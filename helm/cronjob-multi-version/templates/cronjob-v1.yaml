@@ -4,7 +4,10 @@ metadata:
   name: cronjob-v1
   namespace: {{ .Values.namespace }}
   labels:
-    app: cronjob-v1
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    meta.helm.sh/release-name: cronjob-v1
+    meta.helm.sh/release-namespace: cronjob
 spec:
   schedule: "{{ .Values.schedule }}"
   jobTemplate:
