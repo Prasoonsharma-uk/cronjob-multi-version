@@ -1,4 +1,4 @@
-namespace: cronjob1
+namespace: cronjob
 schedule: "*/5 * * * *"
 image:
   repository: prasoonshrama25/cronjob-app
