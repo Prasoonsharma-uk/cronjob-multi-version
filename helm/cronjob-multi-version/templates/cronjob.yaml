@@ -3,7 +3,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: {{ $.Release.Name }}-{{ .name }}
-  namespace: cronjob
+  namespace: {{ .namespace }}
   labels:
     app: {{ $.Release.Name }}
 spec:
