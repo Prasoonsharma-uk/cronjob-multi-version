@@ -1,6 +1,6 @@
 releaseName: cronjob-v3
 
-namespace: cronjob
+namespace: cronjob-v3
 schedule: "*/15 * * * *"
 image:
   repository: prasoonshrama25/cronjob-app
