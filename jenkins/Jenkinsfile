@@ -9,7 +9,6 @@ pipeline {
         TAG = "${params.VERSION}"
         DOCKER_CREDENTIALS_ID = 'docker-credentials-id'
         KUBE_CONFIG = credentials('kubeconfig')
-        NAMESPACES = ['cronjob-v1', 'cronjob-v2', 'cronjob-v3']
     }
     stages {
         stage('Install Helm') {
@@ -55,8 +54,9 @@ pipeline {
         stage('Create Namespaces and PVCs') {
             steps {
                 script {
+                    def namespaces = ['cronjob-v1', 'cronjob-v2', 'cronjob-v3']
                     withKubeConfig([credentialsId: 'kubeconfig']) {
-                        NAMESPACES.each { ns ->
+                        namespaces.each { ns ->
                             bat """
                                 echo Creating namespace and PVC for ${ns}...
 
@@ -81,8 +81,9 @@ pipeline {
         stage('Deploy CronJobs') {
             steps {
                 script {
+                    def namespaces = ['cronjob-v1', 'cronjob-v2', 'cronjob-v3']
                     withKubeConfig([credentialsId: 'kubeconfig']) {
-                        NAMESPACES.each { ns ->
+                        namespaces.each { ns ->
                             bat """
                                 echo Deploying CronJobs in namespace ${ns}...
 
