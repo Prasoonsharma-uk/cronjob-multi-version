@@ -1,0 +1,17 @@
+# Node modules
+node_modules/
+
+# Logs
+*.log
+
+# Docker files
+*.tar
+
+# Kubernetes files
+*.yaml
+
+# Helm files
+*.tgz
+
+# Jenkins workspace
+workspace/
