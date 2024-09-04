@@ -2,6 +2,7 @@ pipeline {
     agent any
     parameters {
         string(name: 'VERSION', defaultValue: 'latest', description: 'Docker image version')
+        string(name: 'RELEASE_NAME', defaultValue: 'cronjob-v2', description: 'Helm release name')
     }
     environment {
         REGISTRY = 'prasoonshrama25'
@@ -72,7 +73,8 @@ pipeline {
                     withKubeConfig([credentialsId: 'kubeconfig']) {
                         bat '''
                             echo Deploying CronJob v2...
-                            helm upgrade --install cronjob-v2 ./helm/cronjob-multi-version --namespace cronjob --values ./helm/cronjob-multi-version/values-v2.yaml
+                            
+                            helm upgrade --install ${params.RELEASE_NAME} ./helm/cronjob-multi-version --namespace cronjob --values ./helm/cronjob-multi-version/values-v2.yaml --set releaseName=${params.RELEASE_NAME}
                         '''
                     }
                 }
