@@ -66,12 +66,7 @@ pipeline {
                         kubectl get namespace cronjob-v1 || kubectl create namespace cronjob-v1
 
                         echo Deploying cronjob-v1 to Kubernetes...
-                        helm upgrade --install cronjob-v1 ./helm/cronjob-multi-version \
-                                     --namespace cronjob-v1 \
-                                     --set image.repository=${REGISTRY}/${IMAGE} \
-                                     --set image.tag=${TAG} \
-                                     --set cronJobs[0].schedule=${params.CRON_SCHEDULE_1} \
-                                     --set cronJobs[0].outputPath=${params.OUTPUT_PATH_1}
+                       helm upgrade --install cronjob-v1 ./helm/cronjob-multi-version --namespace cronjob-v1 --set image.repository=${REGISTRY}/${IMAGE} --set image.tag=${VERSION} --set cronJobs[0].schedule=${params.CRON_SCHEDULE_1} --set cronJobs[0].outputPath=${params.OUTPUT_PATH_1}
                         """
                     }
                 }
