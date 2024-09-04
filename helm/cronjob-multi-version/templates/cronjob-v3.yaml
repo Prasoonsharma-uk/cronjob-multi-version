@@ -4,7 +4,10 @@ metadata:
   name: cronjob-v3
   namespace: {{ .Values.namespace }}
   labels:
-    app: cronjob-v3
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    meta.helm.sh/release-name: cronjob-v3
+    meta.helm.sh/release-namespace: cronjob
 spec:
   schedule: "{{ .Values.schedule }}"
   jobTemplate:
@@ -30,4 +33,3 @@ spec:
           - name: output-volume
             persistentVolumeClaim:
               claimName: {{ .Values.persistentVolumeClaim.name }}
-
