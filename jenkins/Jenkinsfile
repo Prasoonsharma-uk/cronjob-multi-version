@@ -20,10 +20,7 @@ pipeline {
                         :: Download Helm installation script
                         curl -fsSL -o get_helm.bat https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
 
-                        :: Make the script executable
-                        chmod 700 get_helm.bat
-
-                        :: Run the script to install Helm
+                        :: Run the script to install Helm (no need to make it executable in Windows)
                         get_helm.bat
 
                         :: Clean up the installation script
@@ -63,8 +60,10 @@ pipeline {
                                 :: Create the namespace
                                 kubectl create namespace ${ns} --dry-run=client -o yaml | kubectl apply -f -
 
-                                :: Add Helm-specific labels and annotations
+                                :: Ensure the namespace is managed by Helm
                                 kubectl label namespace ${ns} app.kubernetes.io/managed-by=Helm --overwrite
+
+                                :: Add Helm-specific annotations
                                 kubectl annotate namespace ${ns} meta.helm.sh/release-name=cronjob-app-pvc-${ns} --overwrite
                                 kubectl annotate namespace ${ns} meta.helm.sh/release-namespace=${ns} --overwrite
 
