@@ -1,8 +1,10 @@
 pipeline {
     agent any
+    
     parameters {
         string(name: 'VERSION', defaultValue: 'latest', description: 'Docker image version')
     }
+    
     environment {
         REGISTRY = 'prasoonshrama25'
         IMAGE = 'cronjob-app'
@@ -10,6 +12,7 @@ pipeline {
         DOCKER_CREDENTIALS_ID = 'docker-credentials-id'
         KUBE_CONFIG = credentials('kubeconfig')
     }
+    
     stages {
         stage('Install Helm') {
             steps {
@@ -35,6 +38,7 @@ pipeline {
                 }
             }
         }
+        
         stage('Build Docker Image') {
             steps {
                 script {
@@ -43,6 +47,7 @@ pipeline {
                 }
             }
         }
+        
         stage('Push Docker Image') {
             steps {
                 script {
@@ -57,7 +62,7 @@ pipeline {
         stage('Deploy CronJob v1') {
             steps {
                 script {
-                    withKubeConfig([credentialsId: 'kubeconfig']) {
+                    withKubeConfig([credentialsId: KUBE_CONFIG]) {
                         bat '''
                             echo Deploying CronJob v1...
                             helm upgrade --install cronjob-v1 ./helm/cronjob-multi-version --namespace cronjob1 --values ./helm/cronjob-multi-version/values-v1.yaml
@@ -66,16 +71,18 @@ pipeline {
                 }
             }
         }
+        
         stage('Deploy CronJob v2') {
             steps {
                 script {
-                    withKubeConfig([credentialsId: 'kubeconfig']) {
+                    withKubeConfig([credentialsId: KUBE_CONFIG]) {
                         bat """
-                            echo Deploying CronJob V2...
+                            echo Deploying CronJob v2...
                             helm upgrade --install cronjob-v2 ./helm/cronjob-multi-version --namespace cronjob2 --values ./helm/cronjob-multi-version/values-v2.yaml
                         """
                     }
                 }
             }
         }
-    }  
+    }
+}
