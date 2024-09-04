@@ -6,7 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: Helm
   annotations:
-    meta.helm.sh/release-name: cronjob-v3
+    meta.helm.sh/release-name: {{ .Values.releaseName }}
     meta.helm.sh/release-namespace: cronjob
 spec:
   schedule: "{{ .Values.schedule }}"
