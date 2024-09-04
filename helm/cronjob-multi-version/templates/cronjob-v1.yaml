@@ -1,28 +1,27 @@
-{{- range .Values.cronJobs }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ $.Release.Name }}-{{ .name }}
-  namespace: {{ .namespace }}
+  name: cronjob-v1
+  namespace: {{ .Values.namespace }}
   labels:
-    app: {{ $.Release.Name }}
+    app: cronjob-v1
 spec:
-  schedule: "{{ .schedule }}"
+  schedule: "{{ .Values.schedule }}"
   jobTemplate:
     spec:
       template:
         spec:
           containers:
-          - name: {{ .name }}
-            image: {{ $.Values.image.repository }}:{{ $.Values.image.tag }}
+          - name: cronjob-v1
+            image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
             command:
             - /bin/sh
             - -c
             - |
-              echo "Running cron job {{ .name }} with version {{ $.Values.image.tag }} at $(date)" > /output/{{ .outputPath }}/file-$(date +\%Y\%m\%dT\%H\%M\%S).txt
+              echo "Running CronJob v1 at $(date)" > /output/file-$(date +%Y%m%dT%H%M%S).txt
             env:
             - name: OUTPUT_PATH
-              value: "{{ .outputPath }}"
+              value: "{{ .Values.outputPath }}"
             volumeMounts:
             - name: output-volume
               mountPath: /output
@@ -30,5 +29,4 @@ spec:
           volumes:
           - name: output-volume
             persistentVolumeClaim:
-              claimName: {{ $.Values.persistentVolumeClaim.name }}
-{{- end }}
+              claimName: {{ .Values.persistentVolumeClaim.name }}
