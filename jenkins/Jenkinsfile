@@ -6,7 +6,7 @@ pipeline {
     environment {
         REGISTRY = 'prasoonshrama25'
         IMAGE = 'cronjob-app'
-        TAG = "${params.VERSION}" // Use the version parameter for tagging
+        TAG = "${params.VERSION}"
         DOCKER_CREDENTIALS_ID = 'docker-credentials-id'
         KUBE_CONFIG = credentials('kubeconfig')
     }
@@ -38,7 +38,6 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build Docker image with the specified version
                     bat "docker build -t ${REGISTRY}/${IMAGE}:${params.VERSION} -f Dockerfile ."
                 }
             }
@@ -46,59 +45,38 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    // Push Docker image to the registry with the specified tag
                     docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
                         bat "docker push ${REGISTRY}/${IMAGE}:${params.VERSION}"
                     }
                 }
             }
         }
-        stage('Deploy CronJob Version 1') {
+        stage('Update Namespace Metadata') {
             steps {
                 script {
                     withKubeConfig([credentialsId: 'kubeconfig']) {
                         bat '''
-                            helm upgrade --install cronjob-app-v1 ./helm/cronjob-multi-version \
-                            --namespace cronjob \
-                            --set image.repository=${REGISTRY}/${IMAGE} \
-                            --set image.tag=${VERSION} \
-                            --set cronJob.name=cronjob-v1 \
-                            --set cronJob.schedule="*/5 * * * *" \
-                            --set cronJob.outputPath=logs/version1
+                            echo Updating namespace metadata...
+
+                            :: Add Helm-specific labels and annotations
+                            kubectl label namespace cronjob app.kubernetes.io/managed-by=Helm --overwrite
+                            kubectl annotate namespace cronjob meta.helm.sh/release-name=cronjob-app --overwrite
+                            kubectl annotate namespace cronjob meta.helm.sh/release-namespace=cronjob --overwrite
                         '''
                     }
                 }
             }
         }
-        stage('Deploy CronJob Version 2') {
+        stage('Deploy CronJobs') {
             steps {
                 script {
                     withKubeConfig([credentialsId: 'kubeconfig']) {
                         bat '''
-                            helm upgrade --install cronjob-app-v2 ./helm/cronjob-multi-version \
+                            echo Deploying CronJobs...
+                            helm upgrade --install cronjob-app ./helm/cronjob-multi-version \
                             --namespace cronjob \
                             --set image.repository=${REGISTRY}/${IMAGE} \
-                            --set image.tag=${VERSION} \
-                            --set cronJob.name=cronjob-v2 \
-                            --set cronJob.schedule="*/10 * * * *" \
-                            --set cronJob.outputPath=logs/version2
-                        '''
-                    }
-                }
-            }
-        }
-        stage('Deploy CronJob Version 3') {
-            steps {
-                script {
-                    withKubeConfig([credentialsId: 'kubeconfig']) {
-                        bat '''
-                            helm upgrade --install cronjob-app-v3 ./helm/cronjob-multi-version \
-                            --namespace cronjob \
-                            --set image.repository=${REGISTRY}/${IMAGE} \
-                            --set image.tag=${VERSION} \
-                            --set cronJob.name=cronjob-v3 \
-                            --set cronJob.schedule="*/15 * * * *" \
-                            --set cronJob.outputPath=logs/version3
+                            --set image.tag=${VERSION}
                         '''
                     }
                 }
