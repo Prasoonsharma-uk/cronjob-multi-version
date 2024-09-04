@@ -5,7 +5,7 @@ pipeline {
     }
     environment {
         REGISTRY = 'prasoonshrama25'
-        IMAGE = 'k8s-deployment-dockerimage'
+        IMAGE = 'cronjob-app'
         TAG = "${params.VERSION}" // Use the version parameter for tagging
         DOCKER_CREDENTIALS_ID = 'docker-credentials-id'
         KUBE_CONFIG = credentials('kubeconfig')
