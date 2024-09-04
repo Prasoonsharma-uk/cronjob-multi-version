@@ -3,13 +3,9 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: {{ $.Release.Name }}-{{ .name }}
-  namespace: {{ $.Values.namespace }}
+  namespace: cronjob
   labels:
     app: {{ $.Release.Name }}
-    app.kubernetes.io/managed-by: Helm
-  annotations:
-    meta.helm.sh/release-name: "{{ $.Release.Name }}"
-    meta.helm.sh/release-namespace: "{{ $.Values.namespace }}"
 spec:
   schedule: "{{ .schedule }}"
   jobTemplate:
@@ -30,9 +26,9 @@ spec:
             volumeMounts:
             - name: output-volume
               mountPath: /output
-          restartPolicy: OnFailure
-          volumes:
-          - name: output-volume
-            persistentVolumeClaim:
-              claimName: {{ $.Values.persistentVolumeClaim.name }}
+            restartPolicy: OnFailure
+            volumes:
+            - name: output-volume
+              persistentVolumeClaim:
+                claimName: {{ $.Values.persistentVolumeClaim.name }}
 {{- end }}
