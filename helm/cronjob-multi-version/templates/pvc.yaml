@@ -1,13 +1,11 @@
-{{- range .Values.cronJobs }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ $.Values.persistentVolumeClaim.name }}
-  namespace: {{ .namespace }}
+  name: {{ .Values.persistentVolumeClaim.name }}
+  namespace: {{ $.Values.namespace }}
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 1Gi
-{{- end }}
