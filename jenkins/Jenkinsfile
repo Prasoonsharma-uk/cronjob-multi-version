@@ -60,6 +60,10 @@ pipeline {
                                 :: Delete existing Helm releases if they exist
                                 helm delete cronjob-app-pvc-${ns} --namespace ${ns} || echo "No existing Helm release to delete in namespace ${ns}"
 
+                                :: Clean up old Helm metadata
+                                kubectl annotate namespace ${ns} meta.helm.sh/release-name- || echo "No Helm release annotations to remove in namespace ${ns}"
+                                kubectl annotate namespace ${ns} meta.helm.sh/release-namespace- || echo "No Helm release namespace annotations to remove in namespace ${ns}"
+
                                 :: Delete existing namespace if needed
                                 kubectl delete namespace ${ns} --ignore-not-found=true
                             """
