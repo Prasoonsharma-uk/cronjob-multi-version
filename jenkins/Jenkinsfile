@@ -6,7 +6,7 @@ pipeline {
     environment {
         REGISTRY = 'prasoonshrama25'
         IMAGE = 'cronjob-app'
-        TAG = "${params.VERSION}" // Use the version parameter for tagging
+        TAG = "${params.VERSION}"
         DOCKER_CREDENTIALS_ID = 'docker-credentials-id'
         KUBE_CONFIG = credentials('kubeconfig')
     }
@@ -38,7 +38,6 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build Docker image with the specified version
                     bat "docker build -t ${REGISTRY}/${IMAGE}:${params.VERSION} -f Dockerfile ."
                 }
             }
@@ -46,7 +45,6 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    // Push Docker image to the registry with the specified tag
                     docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
                         bat "docker push ${REGISTRY}/${IMAGE}:${params.VERSION}"
                     }
@@ -60,13 +58,15 @@ pipeline {
                         bat '''
                             echo Cleaning up existing Helm releases and namespaces...
 
+                            :: Clean up Helm releases
                             helm delete cronjob-v1 --namespace cronjob-v1 || echo "Release cronjob-v1 not found"
                             helm delete cronjob-v2 --namespace cronjob-v2 || echo "Release cronjob-v2 not found"
                             helm delete cronjob-v3 --namespace cronjob-v3 || echo "Release cronjob-v3 not found"
 
-                            kubectl delete namespace cronjob-v1 || echo "Namespace cronjob-v1 not found"
-                            kubectl delete namespace cronjob-v2 || echo "Namespace cronjob-v2 not found"
-                            kubectl delete namespace cronjob-v3 || echo "Namespace cronjob-v3 not found"
+                            :: Clean up namespaces
+                            kubectl delete namespace cronjob-v1 --ignore-not-found
+                            kubectl delete namespace cronjob-v2 --ignore-not-found
+                            kubectl delete namespace cronjob-v3 --ignore-not-found
                         '''
                     }
                 }
