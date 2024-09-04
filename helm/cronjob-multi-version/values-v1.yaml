@@ -1,6 +1,6 @@
 releaseName: cronjob-v1
 
-namespace: cronjob
+namespace: cronjob-v1
 schedule: "*/5 * * * *"
 image:
   repository: prasoonshrama25/cronjob-app
