@@ -9,6 +9,7 @@ pipeline {
         TAG = "${params.VERSION}"
         DOCKER_CREDENTIALS_ID = 'docker-credentials-id'
         KUBE_CONFIG = credentials('kubeconfig')
+        NAMESPACES = ['cronjob-v1', 'cronjob-v2', 'cronjob-v3']
     }
     stages {
         stage('Install Helm') {
@@ -51,18 +52,28 @@ pipeline {
                 }
             }
         }
-        stage('Update Namespace Metadata') {
+        stage('Create Namespaces and PVCs') {
             steps {
                 script {
                     withKubeConfig([credentialsId: 'kubeconfig']) {
-                        bat '''
-                            echo Updating namespace metadata...
+                        NAMESPACES.each { ns ->
+                            bat """
+                                echo Creating namespace and PVC for ${ns}...
 
-                            :: Add Helm-specific labels and annotations
-                            kubectl label namespace cronjob app.kubernetes.io/managed-by=Helm --overwrite
-                            kubectl annotate namespace cronjob meta.helm.sh/release-name=cronjob-app --overwrite
-                            kubectl annotate namespace cronjob meta.helm.sh/release-namespace=cronjob --overwrite
-                        '''
+                                :: Create the namespace
+                                kubectl create namespace ${ns} --dry-run=client -o yaml | kubectl apply -f -
+
+                                :: Add Helm-specific labels and annotations
+                                kubectl label namespace ${ns} app.kubernetes.io/managed-by=Helm --overwrite
+                                kubectl annotate namespace ${ns} meta.helm.sh/release-name=cronjob-app --overwrite
+                                kubectl annotate namespace ${ns} meta.helm.sh/release-namespace=cronjob --overwrite
+
+                                :: Deploy the PersistentVolumeClaim
+                                helm upgrade --install cronjob-app-pvc-${ns} ./helm/cronjob-multi-version \
+                                --namespace ${ns} \
+                                --set persistentVolumeClaim.name=cronjob-app-pvc-${ns}
+                            """
+                        }
                     }
                 }
             }
@@ -71,13 +82,17 @@ pipeline {
             steps {
                 script {
                     withKubeConfig([credentialsId: 'kubeconfig']) {
-                        bat '''
-                            echo Deploying CronJobs...
-                            helm upgrade --install cronjob-app ./helm/cronjob-multi-version \
-                            --namespace cronjob \
-                            --set image.repository=${REGISTRY}/${IMAGE} \
-                            --set image.tag=${VERSION}
-                        '''
+                        NAMESPACES.each { ns ->
+                            bat """
+                                echo Deploying CronJobs in namespace ${ns}...
+
+                                helm upgrade --install cronjob-app-${ns} ./helm/cronjob-multi-version \
+                                --namespace ${ns} \
+                                --set image.repository=${REGISTRY}/${IMAGE} \
+                                --set image.tag=${VERSION} \
+                                --set namespace=${ns}
+                            """
+                        }
                     }
                 }
             }
