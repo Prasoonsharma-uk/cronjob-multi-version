@@ -10,19 +10,12 @@ spec:
   schedule: "{{ .Values.schedule }}"
   jobTemplate:
     spec:
+      activeDeadlineSeconds: 600  # Timeout for the job execution in seconds (10 minutes)
       template:
         spec:
           containers:
           - name: {{ .Values.releaseName }}
-            image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
-            command:
-            - /bin/sh
-            - -c
-            - |
-              echo "Running cron job {{ .Values.releaseName }} with version {{ .Values.image.tag }} at $(date)" > /output/{{ .Values.outputPath }}/file-$(date +\%Y\%m\%dT\%H\%M\%S).txt
-            env:
-            - name: OUTPUT_PATH
-              value: "{{ .Values.outputPath }}"
+            image: {{ $.Values.image.repository }}:{{ $.Values.image.tag }}
             volumeMounts:
             - name: output-volume
               mountPath: /output
@@ -30,4 +23,4 @@ spec:
           volumes:
           - name: output-volume
             persistentVolumeClaim:
-              claimName: {{ .Values.persistentVolumeClaim.name }}
+              claimName: {{ $.Values.persistentVolumeClaim.name }}
